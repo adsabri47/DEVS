@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% block after_field_sets %}
+    <div style="margin-top: 20px; padding: 15px; background: #f4f6f9; border-left: 5px solid #007bff;">
+        <h4 style="color: #333;">Authorized Forensic Roles</h4>
+        <ul style="list-style: none; padding-left: 0;">
+            {% for role in forensic_roles %}
+                <li style="font-weight: bold; padding: 5px 0;">🛡️ {{ role }}</li>
+            {% empty %}
+                <li>No forensic roles assigned to this group.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

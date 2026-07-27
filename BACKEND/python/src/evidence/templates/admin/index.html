@@ -1,0 +1,163 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container-fluid">
+    <!-- Top Row: Summary Boxes -->
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success" style="border-radius:15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; color: white; position: relative; margin-bottom: 20px;">
+                <div class="inner">
+                    <h3>{{ verified|default:0 }}</h3>
+                    <p>Verified Intact</p>
+                </div>
+                <div class="icon" style="position: absolute; right: 15px; top: 15px; font-size: 2rem; opacity: 0.3;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger" style="border-radius:15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; color: white; position: relative; margin-bottom: 20px;">
+                <div class="inner">
+                    <h3>{{ tampered|default:0 }}</h3>
+                    <p>Tamper Alerts</p>
+                </div>
+                <div class="icon" style="position: absolute; right: 15px; top: 15px; font-size: 2rem; opacity: 0.3;">
+                    <i class="fas fa-biohazard"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-primary" style="border-radius:15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; color: white; position: relative; margin-bottom: 20px;">
+                <div class="inner">
+                    <h3>{{ uploaded|default:0 }}</h3>
+                    <p>Files Uploaded (30d)</p>
+                </div>
+                <div class="icon" style="position: absolute; right: 15px; top: 15px; font-size: 2rem; opacity: 0.3;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-dark" style="border-radius:15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; color: white; position: relative; margin-bottom: 20px;">
+                <div class="inner">
+                    <h3>{{ deleted|default:0 }}</h3>
+                    <p>Evidence Purged</p>
+                </div>
+                <div class="icon" style="position: absolute; right: 15px; top: 15px; font-size: 2rem; opacity: 0.3;">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Row: Charts and Logs -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header border-0"><b><i class="fas fa-chart-pie mr-1"></i> Evidence Integrity Distribution</b></div>
+                <div class="card-body"><canvas id="healthChart" height="250"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header border-0"><b><i class="fas fa-chart-bar mr-1"></i> System Activity Mix</b></div>
+                <div class="card-body"><canvas id="activityChart" height="250"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header border-0"><b><i class="fas fa-list mr-1"></i> Live Forensic Feed</b></div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for log in recent_activities %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="font-size: 0.85rem;">
+                            <span>
+                                <strong>{{ log.user.username|default:"System" }}</strong>: 
+                                {{ log.get_action_display|default:log.action }}
+                            </span>
+                            <span class="badge badge-light text-muted">{{ log.timestamp|timesince }} ago</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted">No recent activity detected</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data Extraction
+        const v_count = "{{ verified|default:0 }}";
+        const t_count = "{{ tampered|default:0 }}";
+        const p_count = "{{ pending|default:0 }}"; // From second script
+        const u_count = "{{ uploaded|default:0 }}";
+        const d_count = "{{ deleted|default:0 }}";
+        const dw_count = "{{ downloaded|default:0 }}";
+        const o_count = "{{ others|default:0 }}";
+
+        // Chart 1: Integrity Health (Unified with Pending status)
+        new Chart(document.getElementById('healthChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Intact', 'Tampered', 'Pending'],
+                datasets: [{
+                    data: [v_count, t_count, p_count],
+                    backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                    hoverOffset: 4
+                }]
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { position: 'bottom' } 
+                } 
+            }
+        });
+
+        // Chart 2: System Activity (Detailed Mix)
+        new Chart(document.getElementById('activityChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Uploaded', 'Deleted', 'Downloads', 'Other'],
+                datasets: [{
+                    label: 'Actions',
+                    data: [u_count, d_count, dw_count, o_count],
+                    backgroundColor: ['#007bff', '#343a40', '#17a2b8', '#6c757d'],
+                    borderRadius: 5
+                }]
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1 } 
+                    } 
+                }
+            }
+        });
+    });
+</script>
+
+<style>
+    /* Hides default Jazzmin side/action columns for full-width dashboard */
+    .ad-actions-column, .col-md-3.ad-actions-column { display: none !important; }
+    .content-column, .col-md-9.content-column { flex: 0 0 100% !important; max-width: 100% !important; }
+    
+    /* Box Hover Effects */
+    .small-box { transition: transform 0.2s; cursor: default; }
+    .small-box:hover { transform: translateY(-5px); }
+
+    /* Fix for list-group font size consistency */
+    .list-group-item { border-left: 0; border-right: 0; }
+</style>
+{% endblock %}

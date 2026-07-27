@@ -1,0 +1,191 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | DEVS Admin</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}"> 
+    
+    <style>
+        /* --- GLOBAL LAYOUT --- */
+        body {
+            background-color: #1e3a5f; 
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            overflow: hidden;
+        }
+
+        /* --- THE LOGIN BOX --- */
+        .login-card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo-img {
+            width: 110px; 
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #1e3a5f;
+            margin: 0;
+            font-weight: 800;
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 25px;
+        }
+
+        /* --- ERROR ALERT BOX --- */
+        /* This section catches Django's login errors and displays them clearly */
+        .error-container {
+            background-color: #fce4e4;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+
+        .error-container b {
+            margin-right: 5px;
+        }
+
+        /* --- INPUT FIELDS --- */
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+            position: relative; 
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            border-color: #1e3a5f;
+            outline: none;
+            box-shadow: 0 0 8px rgba(30, 58, 95, 0.2);
+        }
+
+        #password-icon {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+
+        /* --- ACTION BUTTON --- */
+        .btn-access {
+            background-color: #1e3a5f;
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-access:hover {
+            background-color: #152943;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <img src="{% static 'images/logo.png' %}" alt="DEVS Logo" class="logo-img">
+    <h2>DEVS Portal</h2>
+    <p class="subtitle">Digital Evidence Verification System</p>
+
+    {% if form.errors or error_message %}
+    <div class="error-container">
+        <span>⚠️ <b>Access Denied:</b> Invalid username or password. Please verify your credentials and try again.</span>
+    </div>
+    {% endif %}
+
+    <form id="loginForm" action="{{ app_path }}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter username" required autofocus>
+        </div>
+        
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" id="password" placeholder="••••••••" required>
+            <span id="password-icon" onclick="togglePassword()">👁️</span>
+        </div>
+
+        <button type="submit" class="btn-access" id="submitBtn">Access System</button>
+    </form>
+</div>
+
+<script>
+    /**
+     * Toggles the password field visibility.
+     */
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const passwordIcon = document.getElementById('password-icon');
+        
+        if (passwordInput && passwordIcon) {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.textContent = '👁️';
+            }
+        }
+    }
+
+    /**
+     * Feedback on submit to prevent multiple clicks and show system activity.
+     */
+    document.getElementById('loginForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.textContent = 'AUTHENTICATING...';
+        btn.style.opacity = '0.7';
+        btn.style.pointerEvents = 'none';
+    });
+</script>
+
+</body>
+</html>
